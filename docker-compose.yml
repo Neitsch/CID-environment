@@ -1,0 +1,73 @@
+--- 
+chat: 
+  build: ./lets
+  environment: 
+    - VIRTUAL_HOST=chat.docker.me
+    - VIRTUAL_PORT=8080
+  links: 
+    - mongo
+elasticsearch: 
+  build: ./elasticsearch
+gerrit: 
+  build: ./gerrit
+  environment: 
+    - VIRTUAL_HOST=gerrit.docker.me
+    - VIRTUAL_PORT=8080
+  ports: 
+    - "29418:29418"
+jenkins: 
+  build: ./jenkins
+  environment: 
+    - VIRTUAL_HOST=jenkins.docker.me
+    - VIRTUAL_PORT=8080
+kibana: 
+  build: ./kibana
+  environment: 
+    - VIRTUAL_HOST=kibana.docker.me
+    - VIRTUAL_PORT=5601
+  links: 
+    - elasticsearch
+  volumes: 
+    - "./kibana/config/:/opt/kibana/config/"
+logstash: 
+  build: ./logstash
+  command: "logstash -f /etc/logstash/conf.d/logstash.conf"
+  environment: 
+    - VIRTUAL_HOST=logstash.docker.me
+    - VIRTUAL_PORT=5000
+  links: 
+    - elasticsearch
+  volumes: 
+    - "./logstash/config:/etc/logstash/conf.d"
+mongo: 
+  build: ./mongo
+nexus: 
+  build: ./nexus
+  environment: 
+    - VIRTUAL_HOST=nexus.docker.me
+    - VIRTUAL_PORT=8081
+nginx: 
+  build: ./nginx
+  ports: 
+    - "80:80"
+  volumes: 
+    - "/var/run/docker.sock:/tmp/docker.sock:ro"
+sonarqube: 
+  build: ./sonarqube
+  environment: 
+    - VIRTUAL_HOST=sonar.docker.me
+    - VIRTUAL_PORT=9000
+    - SONARQUBE_JDBC_USERNAME=sonar
+    - SONARQUBE_JDBC_PASSWORD=Sonar123
+    - "SONARQUBE_JDBC_URL=jdbc:mysql://database:3306/sonar?useUnicode=true&characterEncoding=utf8"
+  links:
+    - database
+database:
+  build: ./mysql
+  expose:
+    - 3306:3306
+  environment:
+    - MYSQL_ROOT_PASSWORD=Abc123
+    - MYSQL_USER=sonar
+    - MYSQL_PASSWORD=Sonar123
+    - MYSQL_DATABASE=sonar
